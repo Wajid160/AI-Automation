@@ -1,0 +1,13 @@
+{
+  "name": "WISMO Agent Workflow",
+  "nodes": [],
+  "connections": {},
+  "settings": {},
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "1.0.0",
+  "note": "This is a placeholder workflow file. Replace with your actual n8n workflow export."
+}
