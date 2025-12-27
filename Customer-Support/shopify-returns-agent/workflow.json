@@ -1,1379 +1,655 @@
 {
-  "name": "Returns & Exchanges Agent",
-  "nodes": [
-    {
-      "parameters": {
-        "pollTimes": {
-          "item": [
-            {
-              "mode": "everyMinute"
+    "name": "Returns \u0026 Exchanges Agent",
+    "nodes": [
+        {
+            "parameters": {
+                "pollTimes": {
+                    "item": [
+                        {
+                            "mode": "everyMinute"
+                        }
+                    ]
+                },
+                "filters": {
+                    "q": "subject:(return OR refund OR exchange OR \"send back\" OR damaged OR \"wrong item\" OR defective)",
+                    "readStatus": "unread"
+                }
+            },
+            "type": "n8n-nodes-base.gmailTrigger",
+            "typeVersion": 1.3,
+            "position": [
+                0,
+                0
+            ],
+            "id": "1034a4b6-c811-4031-9ad0-907f6deb7143",
+            "name": "Receive Return Request",
+            "credentials": {
+                "gmailOAuth2": {
+                    "id": "QPJoekSJw6j9KCpk",
+                    "name": "wajidjaved160"
+                }
             }
-          ]
         },
-        "filters": {
-          "q": "subject:(return OR refund OR exchange OR \"send back\" OR damaged OR \"wrong item\" OR defective)",
-          "readStatus": "unread"
-        }
-      },
-      "type": "n8n-nodes-base.gmailTrigger",
-      "typeVersion": 1.3,
-      "position": [
-        0,
-        0
-      ],
-      "id": "1034a4b6-c811-4031-9ad0-907f6deb7143",
-      "name": "Receive Return Request",
-      "credentials": {
-        "gmailOAuth2": {
-          "id": "QPJoekSJw6j9KCpk",
-          "name": "wajidjaved160"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "jsCode": "// Extract order number from email\nconst emailSubject = $input.item.json.Subject || '';\nconst emailSnippet = $input.item.json.snippet || '';\nconst emailFrom = $input.item.json.From || '';\n\n// Combine subject and snippet for searching\nconst fullText = `${emailSubject} ${emailSnippet}`;\n\nconsole.log('Searching in text:', fullText);\n\n// Regex patterns - ORDER MATTERS! Most specific first\nconst patterns = [\n  /#(\\d{3,10})/i,                           // #1234 (most common)\n  /order\\s*#\\s*(\\d{3,10})/i,                // order #1234, order# 1234\n  /order\\s+number\\s*:?\\s*#?\\s*(\\d{3,10})/i, // order number 1234, order number: 1234\n  /order\\s*:?\\s*(\\d{3,10})/i,               // order: 1234, order 1234\n  /#([A-Z]{2}\\d{3,8})/i,                    // #AB1234 (Shopify letter format)\n  /order\\s*#?\\s*([A-Z]{2}\\d{3,8})/i         // order AB1234\n];\n\nlet orderNumber = null;\n\n// Try each pattern\nfor (const pattern of patterns) {\n  const match = fullText.match(pattern);\n  if (match) {\n    orderNumber = match[1];\n    console.log('Pattern matched:', pattern, '→ Order:', orderNumber);\n    break;\n  }\n}\n\n// If no order number found\nif (!orderNumber) {\n  return {\n    json: {\n      orderFound: false,\n      originalEmail: $input.item.json,\n      searchedText: fullText,\n      errorMessage: \"No order number found in email\"\n    }\n  };\n}\n\n// Return the order number and original email data\nreturn {\n  json: {\n    orderFound: true,\n    orderNumber: orderNumber,\n    customerEmail: emailFrom,\n    emailSubject: emailSubject,\n    emailBody: emailSnippet,\n    originalEmail: $input.item.json\n  }\n};"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        272,
-        0
-      ],
-      "id": "c151ae3b-3059-4e28-9e6a-cfde0da233c0",
-      "name": "Extract Order Number"
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 3
-          },
-          "conditions": [
-            {
-              "id": "bb1fa050-1808-4c3a-aa8a-79fb14c820bb",
-              "leftValue": "={{ $json.orderFound }}",
-              "rightValue": true,
-              "operator": {
-                "type": "boolean",
-                "operation": "equals"
-              }
+        {
+            "parameters": {
+                "jsCode": "// Extract order number from email\nconst emailSubject = $input.item.json.Subject || \u0027\u0027;\nconst emailSnippet = $input.item.json.snippet || \u0027\u0027;\nconst emailFrom = $input.item.json.From || \u0027\u0027;\n\n// Combine subject and snippet for searching\nconst fullText = `${emailSubject} ${emailSnippet}`;\n\nconsole.log(\u0027Searching in text:\u0027, fullText);\n\n// Regex patterns - ORDER MATTERS! Most specific first\nconst patterns = [\n  /#(\\d{3,10})/i,                           // #1234 (most common)\n  /order\\s*#\\s*(\\d{3,10})/i,                // order #1234, order# 1234\n  /order\\s+number\\s*:?\\s*#?\\s*(\\d{3,10})/i, // order number 1234, order number: 1234\n  /order\\s*:?\\s*(\\d{3,10})/i,               // order: 1234, order 1234\n  /#([A-Z]{2}\\d{3,8})/i,                    // #AB1234 (Shopify letter format)\n  /order\\s*#?\\s*([A-Z]{2}\\d{3,8})/i         // order AB1234\n];\n\nlet orderNumber = null;\n\n// Try each pattern\nfor (const pattern of patterns) {\n  const match = fullText.match(pattern);\n  if (match) {\n    orderNumber = match[1];\n    console.log(\u0027Pattern matched:\u0027, pattern, \u0027→ Order:\u0027, orderNumber);\n    break;\n  }\n}\n\n// If no order number found\nif (!orderNumber) {\n  return {\n    json: {\n      orderFound: false,\n      originalEmail: $input.item.json,\n      searchedText: fullText,\n      errorMessage: \"No order number found in email\"\n    }\n  };\n}\n\n// Return the order number and original email data\nreturn {\n  json: {\n    orderFound: true,\n    orderNumber: orderNumber,\n    customerEmail: emailFrom,\n    emailSubject: emailSubject,\n    emailBody: emailSnippet,\n    originalEmail: $input.item.json\n  }\n};"
+            },
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                272,
+                0
+            ],
+            "id": "c151ae3b-3059-4e28-9e6a-cfde0da233c0",
+            "name": "Extract Order Number"
+        },
+        {
+            "parameters": {
+                "conditions": {
+                    "options": {
+                        "caseSensitive": true,
+                        "leftValue": "",
+                        "typeValidation": "strict",
+                        "version": 3
+                    },
+                    "conditions": [
+                        {
+                            "id": "bb1fa050-1808-4c3a-aa8a-79fb14c820bb",
+                            "leftValue": "={{ $json.orderFound }}",
+                            "rightValue": true,
+                            "operator": {
+                                "type": "boolean",
+                                "operation": "equals"
+                            }
+                        }
+                    ],
+                    "combinator": "and"
+                },
+                "options": {}
+            },
+            "type": "n8n-nodes-base.if",
+            "typeVersion": 2.3,
+            "position": [
+                560,
+                0
+            ],
+            "id": "15f685a8-1c95-4826-884d-8235fcfd2475",
+            "name": "Order Number Found?"
+        },
+        {
+            "parameters": {
+                "jsCode": "// Check if order was found\nconst orders = $input.item.json.orders;\n\nif (!orders || orders.length === 0) {\n  return {\n    json: {\n      orderFound: false,\n      orderNumber: $(\u0027Extract Order Number\u0027).item.json.orderNumber,\n      errorMessage: \"Order not found in Shopify\"\n    }\n  };\n}\n\n// Get the first order (should only be one with exact name match)\nconst order = orders[0];\n\n// Return structured order data\nreturn {\n  json: {\n    orderFound: true,\n    order: {\n      id: order.id,\n      name: order.name,\n      email: order.email,\n      created_at: order.created_at,\n      total_price: order.total_price,\n      currency: order.currency,\n      financial_status: order.financial_status,\n      fulfillment_status: order.fulfillment_status,\n      line_items: order.line_items,\n      customer: order.customer,\n      shipping_address: order.shipping_address\n    },\n    customerEmail: $(\u0027Extract Order Number\u0027).item.json.customerEmail,\n    requestedOrderNumber: $(\u0027Extract Order Number\u0027).item.json.orderNumber\n  }\n};"
+            },
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                1024,
+                -160
+            ],
+            "id": "3b2afbbc-4aea-4ec9-a124-2d8ee83763c5",
+            "name": "Parse Order Response"
+        },
+        {
+            "parameters": {
+                "url": "=https://clothymax.myshopify.com/admin/api/2024-01/orders.json?name=%23{{ $json.orderNumber }}\u0026status=any",
+                "authentication": "genericCredentialType",
+                "genericAuthType": "httpHeaderAuth",
+                "options": {}
+            },
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.3,
+            "position": [
+                832,
+                -160
+            ],
+            "id": "8f895bcb-7b38-4ddb-aa74-bc768e7e9a95",
+            "name": "Search Order",
+            "credentials": {
+                "httpHeaderAuth": {
+                    "id": "BbQnBfPqjFGZ29CY",
+                    "name": "Header Auth account"
+                }
             }
-          ],
-          "combinator": "and"
         },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.3,
-      "position": [
-        560,
-        0
-      ],
-      "id": "15f685a8-1c95-4826-884d-8235fcfd2475",
-      "name": "Order Number Found?"
-    },
-    {
-      "parameters": {
-        "jsCode": "// Check if order was found\nconst orders = $input.item.json.orders;\n\nif (!orders || orders.length === 0) {\n  return {\n    json: {\n      orderFound: false,\n      orderNumber: $('Extract Order Number').item.json.orderNumber,\n      errorMessage: \"Order not found in Shopify\"\n    }\n  };\n}\n\n// Get the first order (should only be one with exact name match)\nconst order = orders[0];\n\n// Return structured order data\nreturn {\n  json: {\n    orderFound: true,\n    order: {\n      id: order.id,\n      name: order.name,\n      email: order.email,\n      created_at: order.created_at,\n      total_price: order.total_price,\n      currency: order.currency,\n      financial_status: order.financial_status,\n      fulfillment_status: order.fulfillment_status,\n      line_items: order.line_items,\n      customer: order.customer,\n      shipping_address: order.shipping_address\n    },\n    customerEmail: $('Extract Order Number').item.json.customerEmail,\n    requestedOrderNumber: $('Extract Order Number').item.json.orderNumber\n  }\n};"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        1024,
-        -160
-      ],
-      "id": "3b2afbbc-4aea-4ec9-a124-2d8ee83763c5",
-      "name": "Parse Order Response"
-    },
-    {
-      "parameters": {
-        "url": "=https://clothymax.myshopify.com/admin/api/2024-01/orders.json?name=%23{{ $json.orderNumber }}&status=any",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.3,
-      "position": [
-        832,
-        -160
-      ],
-      "id": "8f895bcb-7b38-4ddb-aa74-bc768e7e9a95",
-      "name": "Search Order",
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "BbQnBfPqjFGZ29CY",
-          "name": "Header Auth account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 3
-          },
-          "conditions": [
-            {
-              "id": "be49cb6e-79e8-4c97-b977-2d03ae3a75cc",
-              "leftValue": "={{ $json.orderFound }}",
-              "rightValue": true,
-              "operator": {
-                "type": "boolean",
-                "operation": "equals"
-              }
+        {
+            "parameters": {
+                "conditions": {
+                    "options": {
+                        "caseSensitive": true,
+                        "leftValue": "",
+                        "typeValidation": "strict",
+                        "version": 3
+                    },
+                    "conditions": [
+                        {
+                            "id": "be49cb6e-79e8-4c97-b977-2d03ae3a75cc",
+                            "leftValue": "={{ $json.orderFound }}",
+                            "rightValue": true,
+                            "operator": {
+                                "type": "boolean",
+                                "operation": "equals"
+                            }
+                        }
+                    ],
+                    "combinator": "and"
+                },
+                "options": {}
+            },
+            "type": "n8n-nodes-base.if",
+            "typeVersion": 2.3,
+            "position": [
+                1232,
+                -160
+            ],
+            "id": "210f73a0-d8a9-4307-92e9-276fa06fee12",
+            "name": "Order Exists in Shopify?"
+        },
+        {
+            "parameters": {
+                "jsCode": "// Get order data from previous node\nconst orderData = $input.item.json.order;\n\n// Return Policy Rules (you can customize these per merchant)\nconst policy = {\n  returnWindowDays: 30,\n  exchangeWindowDays: 30,\n  autoApproveUnder: 50,\n  requiresApprovalOver: 200,\n  allowFinalSaleReturns: false,\n  refundOriginalShipping: false\n};\n\n// Calculate if return is within time window\nconst orderDate = new Date(orderData.created_at);\nconst today = new Date();\nconst daysAgo = Math.floor((today - orderDate) / (1000 * 60 * 60 * 24));\n\nconst withinReturnWindow = daysAgo \u003c= policy.returnWindowDays;\n\n// Check order status\nconst isFulfilled = orderData.fulfillment_status === \u0027fulfilled\u0027 || orderData.fulfillment_status === \u0027partial\u0027;\nconst isPaid = orderData.financial_status === \u0027paid\u0027 || orderData.financial_status === \u0027partially_refunded\u0027;\n\n// Check if any items are final sale (by tags)\nconst hasFinalSaleItems = orderData.line_items.some(item =\u003e {\n  const productTitle = item.title.toLowerCase();\n  const vendor = (item.vendor || \u0027\u0027).toLowerCase();\n  // Check if product has \"final sale\" or \"clearance\" in title\n  return productTitle.includes(\u0027final sale\u0027) || \n         productTitle.includes(\u0027clearance\u0027) || \n         vendor.includes(\u0027clearance\u0027);\n});\n\n// Calculate total order value\nconst orderTotal = parseFloat(orderData.total_price);\n\n// Determine if auto-approve or needs manual review\nconst autoApprove = orderTotal \u003c policy.autoApproveUnder;\nconst needsApproval = orderTotal \u003e policy.requiresApprovalOver;\n\n// Determine overall eligibility\nlet eligible = true;\nlet ineligibleReasons = [];\n\nif (!withinReturnWindow) {\n  eligible = false;\n  ineligibleReasons.push(`Return window expired (${daysAgo} days ago, limit is ${policy.returnWindowDays} days)`);\n}\n\nif (!isFulfilled) {\n  eligible = false;\n  ineligibleReasons.push(\u0027Order not yet fulfilled/shipped\u0027);\n}\n\nif (!isPaid) {\n  eligible = false;\n  ineligibleReasons.push(\u0027Order not paid\u0027);\n}\n\nif (hasFinalSaleItems \u0026\u0026 !policy.allowFinalSaleReturns) {\n  eligible = false;\n  ineligibleReasons.push(\u0027Order contains final sale items\u0027);\n}\n\n// Build detailed response\nreturn {\n  json: {\n    eligible: eligible,\n    order: {\n      id: orderData.id,\n      name: orderData.name,\n      email: orderData.email,\n      created_at: orderData.created_at,\n      total_price: orderData.total_price,\n      currency: orderData.currency,\n      fulfillment_status: orderData.fulfillment_status,\n      financial_status: orderData.financial_status,\n      line_items: orderData.line_items,\n      shipping_address: orderData.shipping_address\n    },\n    eligibility: {\n      withinReturnWindow: withinReturnWindow,\n      daysAgo: daysAgo,\n      returnWindowDays: policy.returnWindowDays,\n      isFulfilled: isFulfilled,\n      isPaid: isPaid,\n      hasFinalSaleItems: hasFinalSaleItems,\n      autoApprove: autoApprove,\n      needsApproval: needsApproval,\n      orderTotal: orderTotal\n    },\n    ineligibleReasons: ineligibleReasons,\n    policy: policy,\n    customerEmail: $(\u0027Extract Order Number\u0027).item.json.customerEmail,\n    requestedOrderNumber: $(\u0027Extract Order Number\u0027).item.json.orderNumber\n  }\n};"
+            },
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                1456,
+                -352
+            ],
+            "id": "ff8cf9e6-eff3-4c67-a07b-e60dee1b7b11",
+            "name": "Check Return Eligibility"
+        },
+        {
+            "parameters": {
+                "conditions": {
+                    "options": {
+                        "caseSensitive": true,
+                        "leftValue": "",
+                        "typeValidation": "strict",
+                        "version": 3
+                    },
+                    "conditions": [
+                        {
+                            "id": "7650808c-b914-4bee-bd82-8e6577d08bbb",
+                            "leftValue": "={{ $json.eligible }}",
+                            "rightValue": true,
+                            "operator": {
+                                "type": "boolean",
+                                "operation": "equals"
+                            }
+                        }
+                    ],
+                    "combinator": "and"
+                },
+                "options": {}
+            },
+            "type": "n8n-nodes-base.if",
+            "typeVersion": 2.3,
+            "position": [
+                1904,
+                -352
+            ],
+            "id": "f61416f1-d6bd-4720-9097-fa89c9f352ef",
+            "name": "Is Return Eligible?"
+        },
+        {
+            "parameters": {
+                "promptType": "define",
+                "text": "=Customer Email: {{ $(\u0027Extract Order Number\u0027).item.json.emailBody || $(\u0027Extract Order Number\u0027).item.json.emailSubject }}\n\nPlease respond to this customer\u0027s return request.",
+                "options": {
+                    "systemMessage": "=You are a helpful customer service agent for an e-commerce store handling return requests.\n\nCONTEXT:\n- The customer has requested a return for order {{ $json.order.name }}\n- The order is ELIGIBLE for return\n- Order details:\n  * Order Total: ${{ $json.order.total_price }} {{ $json.order.currency }}\n  * Order Date: {{ $json.order.created_at }}\n  * Days since order: {{ $json.eligibility.daysAgo }} days\n\nRETURN POLICY RULES:\n- Return window: {{ $json.policy.returnWindowDays }} days\n- Auto-approve orders under: ${{ $json.policy.autoApproveUnder }}\n- Requires manual approval over: ${{ $json.policy.requiresApprovalOver }}\n\nPRODUCTS IN ORDER:\n{{ $json.order.line_items.map(item =\u003e `- ${item.name} (Qty: ${item.quantity}) - $${item.price}`).join(\u0027\\n\u0027) }}\n\nYOUR TASK:\n1. Confirm the return request is approved\n2. Ask the customer which items they want to return (if multiple items)\n3. Ask for the reason for return (wrong size, defective, changed mind, etc.)\n4. Explain next steps:\n   - They will receive a return label via email\n   - Once we receive the item, refund will be processed within 5-7 business days\n5. Keep the tone friendly, helpful, and professional\n\nIMPORTANT:\n- Do NOT ask for order number again (we already have it)\n- Do NOT make up information\n- If the customer asks something you don\u0027t know, politely say you\u0027ll check with the team"
+                }
+            },
+            "type": "@n8n/n8n-nodes-langchain.agent",
+            "typeVersion": 3.1,
+            "position": [
+                2144,
+                -496
+            ],
+            "id": "5f7ee642-ff19-4220-922a-1f345cb6b85c",
+            "name": "AI Return Assistant (Approved)"
+        },
+        {
+            "parameters": {
+                "modelName": "models/gemini-3-flash-preview",
+                "options": {}
+            },
+            "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+            "typeVersion": 1,
+            "position": [
+                2144,
+                -656
+            ],
+            "id": "00f8a9cc-3adf-4695-8013-1122fa5f4db9",
+            "name": "LLM",
+            "credentials": {
+                "googlePalmApi": {
+                    "id": "zEaEgmX7xTYG5Wam",
+                    "name": "Agent 4"
+                }
             }
-          ],
-          "combinator": "and"
         },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.3,
-      "position": [
-        1232,
-        -160
-      ],
-      "id": "210f73a0-d8a9-4307-92e9-276fa06fee12",
-      "name": "Order Exists in Shopify?"
-    },
-    {
-      "parameters": {
-        "jsCode": "// Get order data from previous node\nconst orderData = $input.item.json.order;\n\n// Return Policy Rules (you can customize these per merchant)\nconst policy = {\n  returnWindowDays: 30,\n  exchangeWindowDays: 30,\n  autoApproveUnder: 50,\n  requiresApprovalOver: 200,\n  allowFinalSaleReturns: false,\n  refundOriginalShipping: false\n};\n\n// Calculate if return is within time window\nconst orderDate = new Date(orderData.created_at);\nconst today = new Date();\nconst daysAgo = Math.floor((today - orderDate) / (1000 * 60 * 60 * 24));\n\nconst withinReturnWindow = daysAgo <= policy.returnWindowDays;\n\n// Check order status\nconst isFulfilled = orderData.fulfillment_status === 'fulfilled' || orderData.fulfillment_status === 'partial';\nconst isPaid = orderData.financial_status === 'paid' || orderData.financial_status === 'partially_refunded';\n\n// Check if any items are final sale (by tags)\nconst hasFinalSaleItems = orderData.line_items.some(item => {\n  const productTitle = item.title.toLowerCase();\n  const vendor = (item.vendor || '').toLowerCase();\n  // Check if product has \"final sale\" or \"clearance\" in title\n  return productTitle.includes('final sale') || \n         productTitle.includes('clearance') || \n         vendor.includes('clearance');\n});\n\n// Calculate total order value\nconst orderTotal = parseFloat(orderData.total_price);\n\n// Determine if auto-approve or needs manual review\nconst autoApprove = orderTotal < policy.autoApproveUnder;\nconst needsApproval = orderTotal > policy.requiresApprovalOver;\n\n// Determine overall eligibility\nlet eligible = true;\nlet ineligibleReasons = [];\n\nif (!withinReturnWindow) {\n  eligible = false;\n  ineligibleReasons.push(`Return window expired (${daysAgo} days ago, limit is ${policy.returnWindowDays} days)`);\n}\n\nif (!isFulfilled) {\n  eligible = false;\n  ineligibleReasons.push('Order not yet fulfilled/shipped');\n}\n\nif (!isPaid) {\n  eligible = false;\n  ineligibleReasons.push('Order not paid');\n}\n\nif (hasFinalSaleItems && !policy.allowFinalSaleReturns) {\n  eligible = false;\n  ineligibleReasons.push('Order contains final sale items');\n}\n\n// Build detailed response\nreturn {\n  json: {\n    eligible: eligible,\n    order: {\n      id: orderData.id,\n      name: orderData.name,\n      email: orderData.email,\n      created_at: orderData.created_at,\n      total_price: orderData.total_price,\n      currency: orderData.currency,\n      fulfillment_status: orderData.fulfillment_status,\n      financial_status: orderData.financial_status,\n      line_items: orderData.line_items,\n      shipping_address: orderData.shipping_address\n    },\n    eligibility: {\n      withinReturnWindow: withinReturnWindow,\n      daysAgo: daysAgo,\n      returnWindowDays: policy.returnWindowDays,\n      isFulfilled: isFulfilled,\n      isPaid: isPaid,\n      hasFinalSaleItems: hasFinalSaleItems,\n      autoApprove: autoApprove,\n      needsApproval: needsApproval,\n      orderTotal: orderTotal\n    },\n    ineligibleReasons: ineligibleReasons,\n    policy: policy,\n    customerEmail: $('Extract Order Number').item.json.customerEmail,\n    requestedOrderNumber: $('Extract Order Number').item.json.orderNumber\n  }\n};"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        1456,
-        -352
-      ],
-      "id": "ff8cf9e6-eff3-4c67-a07b-e60dee1b7b11",
-      "name": "Check Return Eligibility"
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 3
-          },
-          "conditions": [
-            {
-              "id": "7650808c-b914-4bee-bd82-8e6577d08bbb",
-              "leftValue": "={{ $json.eligible }}",
-              "rightValue": true,
-              "operator": {
-                "type": "boolean",
-                "operation": "equals"
-              }
+        {
+            "parameters": {
+                "promptType": "define",
+                "text": "=Customer Email: {{ $(\u0027Extract Order Number\u0027).item.json.emailBody || $(\u0027Extract Order Number\u0027).item.json.emailSubject }}\n\nPlease respond to this customer\u0027s return request.",
+                "options": {
+                    "systemMessage": "=You are a helpful customer service agent for an e-commerce store handling return requests.\n\nCONTEXT:\n- The customer has requested a return for order {{ $json.order.name }}\n- The order is NOT ELIGIBLE for return\n- Reason(s): {{ $json.ineligibleReasons.join(\u0027, \u0027) }}\n\nORDER DETAILS:\n- Order Total: ${{ $json.order.total_price }} {{ $json.order.currency }}\n- Order Date: {{ $json.order.created_at }}\n- Days since order: {{ $json.eligibility.daysAgo }} days\n- Fulfillment Status: {{ $json.order.fulfillment_status }}\n\nRETURN POLICY:\n- Return window: {{ $json.policy.returnWindowDays }} days from delivery\n- Orders must be fulfilled/shipped to be eligible for return\n\nYOUR TASK:\n1. Politely explain WHY the return cannot be processed\n2. If the order isn\u0027t shipped yet, explain they can cancel instead\n3. If the return window expired, offer a 10% discount code on their next purchase as goodwill\n4. If there are other issues, suggest contacting support for special consideration\n5. Be empathetic and understanding\n\nIMPORTANT:\n- Keep the tone apologetic but firm on policy\n- Offer alternatives when possible\n- Make the customer feel valued despite the rejection"
+                }
+            },
+            "type": "@n8n/n8n-nodes-langchain.agent",
+            "typeVersion": 3.1,
+            "position": [
+                2144,
+                -176
+            ],
+            "id": "0428e6a2-23c1-4b8d-9eff-e6d0576efbce",
+            "name": "AI Return Assistant (Rejected)"
+        },
+        {
+            "parameters": {
+                "operation": "reply",
+                "messageId": "={{ $(\u0027Extract Order Number\u0027).item.json.originalEmail.id }}",
+                "emailType": "text",
+                "message": "={{ $json.output }}",
+                "options": {
+                    "appendAttribution": false,
+                    "replyToSenderOnly": true
+                }
+            },
+            "type": "n8n-nodes-base.gmail",
+            "typeVersion": 2.2,
+            "position": [
+                2704,
+                -368
+            ],
+            "id": "52770bde-216e-47f9-8c52-9f5baeef3890",
+            "name": "Send Return Response",
+            "webhookId": "341b83f1-9fcf-4861-956b-5ed315fd893d",
+            "credentials": {
+                "gmailOAuth2": {
+                    "id": "QPJoekSJw6j9KCpk",
+                    "name": "wajidjaved160"
+                }
             }
-          ],
-          "combinator": "and"
         },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.3,
-      "position": [
-        1904,
-        -352
-      ],
-      "id": "f61416f1-d6bd-4720-9097-fa89c9f352ef",
-      "name": "Is Return Eligible?"
-    },
-    {
-      "parameters": {
-        "promptType": "define",
-        "text": "=Customer Email: {{ $('Extract Order Number').item.json.emailBody || $('Extract Order Number').item.json.emailSubject }}\n\nPlease respond to this customer's return request.",
-        "options": {
-          "systemMessage": "=You are a helpful customer service agent for an e-commerce store handling return requests.\n\nCONTEXT:\n- The customer has requested a return for order {{ $json.order.name }}\n- The order is ELIGIBLE for return\n- Order details:\n  * Order Total: ${{ $json.order.total_price }} {{ $json.order.currency }}\n  * Order Date: {{ $json.order.created_at }}\n  * Days since order: {{ $json.eligibility.daysAgo }} days\n\nRETURN POLICY RULES:\n- Return window: {{ $json.policy.returnWindowDays }} days\n- Auto-approve orders under: ${{ $json.policy.autoApproveUnder }}\n- Requires manual approval over: ${{ $json.policy.requiresApprovalOver }}\n\nPRODUCTS IN ORDER:\n{{ $json.order.line_items.map(item => `- ${item.name} (Qty: ${item.quantity}) - $${item.price}`).join('\\n') }}\n\nYOUR TASK:\n1. Confirm the return request is approved\n2. Ask the customer which items they want to return (if multiple items)\n3. Ask for the reason for return (wrong size, defective, changed mind, etc.)\n4. Explain next steps:\n   - They will receive a return label via email\n   - Once we receive the item, refund will be processed within 5-7 business days\n5. Keep the tone friendly, helpful, and professional\n\nIMPORTANT:\n- Do NOT ask for order number again (we already have it)\n- Do NOT make up information\n- If the customer asks something you don't know, politely say you'll check with the team"
-        }
-      },
-      "type": "@n8n/n8n-nodes-langchain.agent",
-      "typeVersion": 3.1,
-      "position": [
-        2144,
-        -496
-      ],
-      "id": "5f7ee642-ff19-4220-922a-1f345cb6b85c",
-      "name": "AI Return Assistant (Approved)"
-    },
-    {
-      "parameters": {
-        "modelName": "models/gemini-3-flash-preview",
-        "options": {}
-      },
-      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
-      "typeVersion": 1,
-      "position": [
-        2144,
-        -656
-      ],
-      "id": "00f8a9cc-3adf-4695-8013-1122fa5f4db9",
-      "name": "LLM",
-      "credentials": {
-        "googlePalmApi": {
-          "id": "zEaEgmX7xTYG5Wam",
-          "name": "Agent 4"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "promptType": "define",
-        "text": "=Customer Email: {{ $('Extract Order Number').item.json.emailBody || $('Extract Order Number').item.json.emailSubject }}\n\nPlease respond to this customer's return request.",
-        "options": {
-          "systemMessage": "=You are a helpful customer service agent for an e-commerce store handling return requests.\n\nCONTEXT:\n- The customer has requested a return for order {{ $json.order.name }}\n- The order is NOT ELIGIBLE for return\n- Reason(s): {{ $json.ineligibleReasons.join(', ') }}\n\nORDER DETAILS:\n- Order Total: ${{ $json.order.total_price }} {{ $json.order.currency }}\n- Order Date: {{ $json.order.created_at }}\n- Days since order: {{ $json.eligibility.daysAgo }} days\n- Fulfillment Status: {{ $json.order.fulfillment_status }}\n\nRETURN POLICY:\n- Return window: {{ $json.policy.returnWindowDays }} days from delivery\n- Orders must be fulfilled/shipped to be eligible for return\n\nYOUR TASK:\n1. Politely explain WHY the return cannot be processed\n2. If the order isn't shipped yet, explain they can cancel instead\n3. If the return window expired, offer a 10% discount code on their next purchase as goodwill\n4. If there are other issues, suggest contacting support for special consideration\n5. Be empathetic and understanding\n\nIMPORTANT:\n- Keep the tone apologetic but firm on policy\n- Offer alternatives when possible\n- Make the customer feel valued despite the rejection"
-        }
-      },
-      "type": "@n8n/n8n-nodes-langchain.agent",
-      "typeVersion": 3.1,
-      "position": [
-        2144,
-        -176
-      ],
-      "id": "0428e6a2-23c1-4b8d-9eff-e6d0576efbce",
-      "name": "AI Return Assistant (Rejected)"
-    },
-    {
-      "parameters": {
-        "operation": "reply",
-        "messageId": "={{ $('Extract Order Number').item.json.originalEmail.id }}",
-        "emailType": "text",
-        "message": "={{ $json.output }}",
-        "options": {
-          "appendAttribution": false,
-          "replyToSenderOnly": true
-        }
-      },
-      "type": "n8n-nodes-base.gmail",
-      "typeVersion": 2.2,
-      "position": [
-        2704,
-        -368
-      ],
-      "id": "52770bde-216e-47f9-8c52-9f5baeef3890",
-      "name": "Send Return Response",
-      "webhookId": "341b83f1-9fcf-4861-956b-5ed315fd893d",
-      "credentials": {
-        "gmailOAuth2": {
-          "id": "QPJoekSJw6j9KCpk",
-          "name": "wajidjaved160"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "modelName": "models/gemini-3-flash-preview",
-        "options": {
-          "temperature": 0.1
-        }
-      },
-      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
-      "typeVersion": 1,
-      "position": [
-        2144,
-        16
-      ],
-      "id": "f130fc36-7a8b-4cf6-8f16-e499bc025041",
-      "name": "LLM1",
-      "credentials": {
-        "googlePalmApi": {
-          "id": "mv8L8CAD1E5IAcbX",
-          "name": "Agent 6"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "promptType": "define",
-        "text": "=The customer sent this email: \"{{ $('Extract Order Number').item.json.emailSubject }}\"\n\nPlease ask them for their order number so we can help with their return.",
-        "options": {
-          "systemMessage": "=You are a helpful customer service agent for an e-commerce store.\n\nSITUATION:\nThe customer has sent a return request email, but we couldn't find an order number in their message.\n\nEMAIL CONTENT:\nSubject: {{ $('Extract Order Number').item.json.emailSubject }}\nBody: {{ $('Extract Order Number').item.json.emailBody }}\n\nYOUR TASK:\n1. Politely acknowledge their return request\n2. Explain you need their order number to help\n3. Tell them where to find it:\n   - In their order confirmation email\n   - The subject line usually says \"Order #1234\"\n   - Or they can check their account order history\n4. Ask them to reply with the order number\n5. Assure them you'll help as soon as you have it\n\nKeep it friendly, brief, and helpful."
-        }
-      },
-      "type": "@n8n/n8n-nodes-langchain.agent",
-      "typeVersion": 3.1,
-      "position": [
-        800,
-        192
-      ],
-      "id": "e26bab27-3dbd-4dad-8f6a-bd7a5d192998",
-      "name": "AI Agent"
-    },
-    {
-      "parameters": {
-        "modelName": "models/gemini-3-flash-preview",
-        "options": {
-          "temperature": 0.1
-        }
-      },
-      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
-      "typeVersion": 1,
-      "position": [
-        800,
-        384
-      ],
-      "id": "595d8860-558f-4365-8791-6c5632c2d91c",
-      "name": "LLM2",
-      "credentials": {
-        "googlePalmApi": {
-          "id": "ttULyOvFIDGP6nHQ",
-          "name": "Agent 5"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "operation": "reply",
-        "messageId": "={{ $('Extract Order Number').item.json.originalEmail.id }}",
-        "emailType": "text",
-        "message": "={{ $json.output }}",
-        "options": {
-          "appendAttribution": false,
-          "replyToSenderOnly": true
-        }
-      },
-      "type": "n8n-nodes-base.gmail",
-      "typeVersion": 2.2,
-      "position": [
-        1136,
-        192
-      ],
-      "id": "3758fe37-5723-422e-b79c-ec11408bc502",
-      "name": "Send Order Number Request",
-      "webhookId": "dfce11af-9d80-44de-8a75-e2ab4a39ee42",
-      "credentials": {
-        "gmailOAuth2": {
-          "id": "QPJoekSJw6j9KCpk",
-          "name": "wajidjaved160"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "promptType": "define",
-        "text": "=The customer is looking for order #{{ $('Parse Order Response').item.json.requestedOrderNumber }} but we can't find it in our system.\n\nPlease help them locate the correct order information.",
-        "options": {
-          "systemMessage": "=You are a helpful customer service agent for an e-commerce store.\n\nSITUATION:\nThe customer requested a return for order #{{ $('Parse Order Response').item.json.requestedOrderNumber }}, but we cannot find this order number in our system.\n\nPOSSIBLE REASONS:\n- They might have mistyped the order number\n- They might be using a different email than their order email\n- Order might be from a different store\n- Order number might be from an old/archived order\n\nYOUR TASK:\n1. Politely explain we couldn't find that order number\n2. Ask them to double-check the order number\n3. Suggest checking:\n   - Their order confirmation email\n   - Make sure they're contacting the correct store\n   - The email they used to place the order\n4. Offer to help if they can provide the correct order number or order email\n5. Keep it friendly and not accusatory\n\nIMPORTANT: Don't make assumptions about why we can't find it. Just be helpful."
-        }
-      },
-      "type": "@n8n/n8n-nodes-langchain.agent",
-      "typeVersion": 3.1,
-      "position": [
-        1424,
-        16
-      ],
-      "id": "62b212ff-a241-4882-ba5b-d47a11af4051",
-      "name": "Order Not Found Response"
-    },
-    {
-      "parameters": {
-        "modelName": "models/gemini-3-flash-preview",
-        "options": {
-          "temperature": 0.1
-        }
-      },
-      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
-      "typeVersion": 1,
-      "position": [
-        1424,
-        224
-      ],
-      "id": "a607ecfd-e4cd-427b-af9d-41062c6a956e",
-      "name": "LLM3",
-      "credentials": {
-        "googlePalmApi": {
-          "id": "q0pu9s2Gerrvwijk",
-          "name": "Agent 7"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "operation": "reply",
-        "messageId": "={{ $('Extract Order Number').item.json.originalEmail.id }}",
-        "emailType": "text",
-        "message": "={{ $json.output }}",
-        "options": {
-          "appendAttribution": false,
-          "replyToSenderOnly": true
-        }
-      },
-      "type": "n8n-nodes-base.gmail",
-      "typeVersion": 2.2,
-      "position": [
-        1760,
-        16
-      ],
-      "id": "c1de86d8-3279-4eb1-b9c3-f93375dc75d9",
-      "name": "Send Order Number Request2",
-      "webhookId": "dfce11af-9d80-44de-8a75-e2ab4a39ee42",
-      "credentials": {
-        "gmailOAuth2": {
-          "id": "QPJoekSJw6j9KCpk",
-          "name": "wajidjaved160"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "content": "# :)\n# SHOPIFY CUSTOMER SUPPORT AUTOMATION: (RETURN & ECHANGES AGENT)",
-        "height": 1424,
-        "width": 3312,
-        "color": 3
-      },
-      "type": "n8n-nodes-base.stickyNote",
-      "position": [
-        -240,
-        -752
-      ],
-      "typeVersion": 1,
-      "id": "cd722565-6b3f-4895-ac48-00b71dac17a2",
-      "name": "Sticky Note"
-    }
-  ],
-  "pinData": {
-    "AI Return Assistant (Rejected)": [
-      {
-        "json": {
-          "output": "Subject: Regarding your return request for Order #1006\n\nDear Customer,\n\nThank you for reaching out to us regarding your order #1006. \n\nI have looked into your order details, and I see that your purchase of $2,629.95 is currently being processed and has not yet been fulfilled or shipped from our warehouse. \n\nAccording to our return policy, a return can only be initiated once an order has been delivered to you. Because your order is still in the pre-shipment phase, we are unable to process a formal return at this time.\n\n**However, we can certainly help you with an alternative.** Since the order has not yet shipped, we can **cancel your order** for you immediately. This will stop the shipment and trigger a full refund to your original payment method, which is often much faster than waiting for an item to arrive and then shipping it back.\n\nWould you like me to proceed with a cancellation and refund for you? \n\nWe truly value your business and want to ensure you are satisfied with your experience. Please let us know how you would like to proceed, and I will be happy to assist you right away.\n\nBest regards,\n\nCustomer Service Team"
+        {
+            "parameters": {
+                "modelName": "models/gemini-3-flash-preview",
+                "options": {
+                    "temperature": 0.1
+                }
+            },
+            "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+            "typeVersion": 1,
+            "position": [
+                2144,
+                16
+            ],
+            "id": "f130fc36-7a8b-4cf6-8f16-e499bc025041",
+            "name": "LLM1",
+            "credentials": {
+                "googlePalmApi": {
+                    "id": "mv8L8CAD1E5IAcbX",
+                    "name": "Agent 6"
+                }
+            }
         },
-        "pairedItem": {
-          "item": 0
+        {
+            "parameters": {
+                "promptType": "define",
+                "text": "=The customer sent this email: \"{{ $(\u0027Extract Order Number\u0027).item.json.emailSubject }}\"\n\nPlease ask them for their order number so we can help with their return.",
+                "options": {
+                    "systemMessage": "=You are a helpful customer service agent for an e-commerce store.\n\nSITUATION:\nThe customer has sent a return request email, but we couldn\u0027t find an order number in their message.\n\nEMAIL CONTENT:\nSubject: {{ $(\u0027Extract Order Number\u0027).item.json.emailSubject }}\nBody: {{ $(\u0027Extract Order Number\u0027).item.json.emailBody }}\n\nYOUR TASK:\n1. Politely acknowledge their return request\n2. Explain you need their order number to help\n3. Tell them where to find it:\n   - In their order confirmation email\n   - The subject line usually says \"Order #1234\"\n   - Or they can check their account order history\n4. Ask them to reply with the order number\n5. Assure them you\u0027ll help as soon as you have it\n\nKeep it friendly, brief, and helpful."
+                }
+            },
+            "type": "@n8n/n8n-nodes-langchain.agent",
+            "typeVersion": 3.1,
+            "position": [
+                800,
+                192
+            ],
+            "id": "e26bab27-3dbd-4dad-8f6a-bd7a5d192998",
+            "name": "AI Agent"
+        },
+        {
+            "parameters": {
+                "modelName": "models/gemini-3-flash-preview",
+                "options": {
+                    "temperature": 0.1
+                }
+            },
+            "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+            "typeVersion": 1,
+            "position": [
+                800,
+                384
+            ],
+            "id": "595d8860-558f-4365-8791-6c5632c2d91c",
+            "name": "LLM2",
+            "credentials": {
+                "googlePalmApi": {
+                    "id": "ttULyOvFIDGP6nHQ",
+                    "name": "Agent 5"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "operation": "reply",
+                "messageId": "={{ $(\u0027Extract Order Number\u0027).item.json.originalEmail.id }}",
+                "emailType": "text",
+                "message": "={{ $json.output }}",
+                "options": {
+                    "appendAttribution": false,
+                    "replyToSenderOnly": true
+                }
+            },
+            "type": "n8n-nodes-base.gmail",
+            "typeVersion": 2.2,
+            "position": [
+                1136,
+                192
+            ],
+            "id": "3758fe37-5723-422e-b79c-ec11408bc502",
+            "name": "Send Order Number Request",
+            "webhookId": "dfce11af-9d80-44de-8a75-e2ab4a39ee42",
+            "credentials": {
+                "gmailOAuth2": {
+                    "id": "QPJoekSJw6j9KCpk",
+                    "name": "wajidjaved160"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "promptType": "define",
+                "text": "=The customer is looking for order #{{ $(\u0027Parse Order Response\u0027).item.json.requestedOrderNumber }} but we can\u0027t find it in our system.\n\nPlease help them locate the correct order information.",
+                "options": {
+                    "systemMessage": "=You are a helpful customer service agent for an e-commerce store.\n\nSITUATION:\nThe customer requested a return for order #{{ $(\u0027Parse Order Response\u0027).item.json.requestedOrderNumber }}, but we cannot find this order number in our system.\n\nPOSSIBLE REASONS:\n- They might have mistyped the order number\n- They might be using a different email than their order email\n- Order might be from a different store\n- Order number might be from an old/archived order\n\nYOUR TASK:\n1. Politely explain we couldn\u0027t find that order number\n2. Ask them to double-check the order number\n3. Suggest checking:\n   - Their order confirmation email\n   - Make sure they\u0027re contacting the correct store\n   - The email they used to place the order\n4. Offer to help if they can provide the correct order number or order email\n5. Keep it friendly and not accusatory\n\nIMPORTANT: Don\u0027t make assumptions about why we can\u0027t find it. Just be helpful."
+                }
+            },
+            "type": "@n8n/n8n-nodes-langchain.agent",
+            "typeVersion": 3.1,
+            "position": [
+                1424,
+                16
+            ],
+            "id": "62b212ff-a241-4882-ba5b-d47a11af4051",
+            "name": "Order Not Found Response"
+        },
+        {
+            "parameters": {
+                "modelName": "models/gemini-3-flash-preview",
+                "options": {
+                    "temperature": 0.1
+                }
+            },
+            "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+            "typeVersion": 1,
+            "position": [
+                1424,
+                224
+            ],
+            "id": "a607ecfd-e4cd-427b-af9d-41062c6a956e",
+            "name": "LLM3",
+            "credentials": {
+                "googlePalmApi": {
+                    "id": "q0pu9s2Gerrvwijk",
+                    "name": "Agent 7"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "operation": "reply",
+                "messageId": "={{ $(\u0027Extract Order Number\u0027).item.json.originalEmail.id }}",
+                "emailType": "text",
+                "message": "={{ $json.output }}",
+                "options": {
+                    "appendAttribution": false,
+                    "replyToSenderOnly": true
+                }
+            },
+            "type": "n8n-nodes-base.gmail",
+            "typeVersion": 2.2,
+            "position": [
+                1760,
+                16
+            ],
+            "id": "c1de86d8-3279-4eb1-b9c3-f93375dc75d9",
+            "name": "Send Order Number Request2",
+            "webhookId": "dfce11af-9d80-44de-8a75-e2ab4a39ee42",
+            "credentials": {
+                "gmailOAuth2": {
+                    "id": "QPJoekSJw6j9KCpk",
+                    "name": "wajidjaved160"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "content": "# :)\n# SHOPIFY CUSTOMER SUPPORT AUTOMATION: (RETURN \u0026 ECHANGES AGENT)",
+                "height": 1424,
+                "width": 3312,
+                "color": 3
+            },
+            "type": "n8n-nodes-base.stickyNote",
+            "position": [
+                -240,
+                -752
+            ],
+            "typeVersion": 1,
+            "id": "cd722565-6b3f-4895-ac48-00b71dac17a2",
+            "name": "Sticky Note"
         }
-      }
     ],
-    "Search Order": [
-      {
-        "json": {
-          "orders": [
-            {
-              "id": 5892415881251,
-              "admin_graphql_api_id": "gid://shopify/Order/5892415881251",
-              "app_id": 1354745,
-              "browser_ip": "154.198.120.191",
-              "buyer_accepts_marketing": false,
-              "cancel_reason": null,
-              "cancelled_at": null,
-              "cart_token": null,
-              "checkout_id": 33797741805603,
-              "checkout_token": "c82c13f7f68aab49f6e8da3daad4d73b",
-              "client_details": {
-                "accept_language": null,
-                "browser_height": null,
-                "browser_ip": "154.198.120.191",
-                "browser_width": null,
-                "session_hash": null,
-                "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36"
-              },
-              "closed_at": null,
-              "confirmation_number": "0EI8JLC5N",
-              "confirmed": true,
-              "contact_email": "wajidjavedalilanjar@gmail.com",
-              "created_at": "2025-12-23T20:43:42-05:00",
-              "currency": "USD",
-              "current_subtotal_price": "885.95",
-              "current_subtotal_price_set": {
-                "shop_money": {
-                  "amount": "885.95",
-                  "currency_code": "USD"
-                },
-                "presentment_money": {
-                  "amount": "885.95",
-                  "currency_code": "USD"
-                }
-              },
-              "current_total_additional_fees_set": null,
-              "current_total_discounts": "0.00",
-              "current_total_discounts_set": {
-                "shop_money": {
-                  "amount": "0.00",
-                  "currency_code": "USD"
-                },
-                "presentment_money": {
-                  "amount": "0.00",
-                  "currency_code": "USD"
-                }
-              },
-              "current_total_duties_set": null,
-              "current_total_price": "885.95",
-              "current_total_price_set": {
-                "shop_money": {
-                  "amount": "885.95",
-                  "currency_code": "USD"
-                },
-                "presentment_money": {
-                  "amount": "885.95",
-                  "currency_code": "USD"
-                }
-              },
-              "current_total_tax": "0.00",
-              "current_total_tax_set": {
-                "shop_money": {
-                  "amount": "0.00",
-                  "currency_code": "USD"
-                },
-                "presentment_money": {
-                  "amount": "0.00",
-                  "currency_code": "USD"
-                }
-              },
-              "customer_locale": "en",
-              "device_id": null,
-              "discount_codes": [],
-              "duties_included": false,
-              "email": "wajidjavedalilanjar@gmail.com",
-              "estimated_taxes": false,
-              "financial_status": "paid",
-              "fulfillment_status": "fulfilled",
-              "landing_site": null,
-              "landing_site_ref": null,
-              "location_id": null,
-              "merchant_business_entity_id": "18112741411",
-              "merchant_of_record_app_id": null,
-              "name": "#1007",
-              "note": null,
-              "note_attributes": [],
-              "number": 7,
-              "order_number": 1007,
-              "order_status_url": "https://clothymax.myshopify.com/72635678755/orders/072bd8aa5f5173538da1ee6a1d24fe38/authenticate?key=4272e9ad15722611e40cb7bd7f372007",
-              "original_total_additional_fees_set": null,
-              "original_total_duties_set": null,
-              "payment_gateway_names": [
-                "manual"
-              ],
-              "phone": null,
-              "po_number": null,
-              "presentment_currency": "USD",
-              "processed_at": "2025-12-23T20:43:42-05:00",
-              "reference": null,
-              "referring_site": null,
-              "source_identifier": null,
-              "source_name": "shopify_draft_order",
-              "source_url": null,
-              "subtotal_price": "885.95",
-              "subtotal_price_set": {
-                "shop_money": {
-                  "amount": "885.95",
-                  "currency_code": "USD"
-                },
-                "presentment_money": {
-                  "amount": "885.95",
-                  "currency_code": "USD"
-                }
-              },
-              "tags": "",
-              "tax_exempt": false,
-              "tax_lines": [],
-              "taxes_included": false,
-              "test": false,
-              "token": "072bd8aa5f5173538da1ee6a1d24fe38",
-              "total_cash_rounding_payment_adjustment_set": {
-                "shop_money": {
-                  "amount": "0.00",
-                  "currency_code": "USD"
-                },
-                "presentment_money": {
-                  "amount": "0.00",
-                  "currency_code": "USD"
-                }
-              },
-              "total_cash_rounding_refund_adjustment_set": {
-                "shop_money": {
-                  "amount": "0.00",
-                  "currency_code": "USD"
-                },
-                "presentment_money": {
-                  "amount": "0.00",
-                  "currency_code": "USD"
-                }
-              },
-              "total_discounts": "0.00",
-              "total_discounts_set": {
-                "shop_money": {
-                  "amount": "0.00",
-                  "currency_code": "USD"
-                },
-                "presentment_money": {
-                  "amount": "0.00",
-                  "currency_code": "USD"
-                }
-              },
-              "total_line_items_price": "885.95",
-              "total_line_items_price_set": {
-                "shop_money": {
-                  "amount": "885.95",
-                  "currency_code": "USD"
-                },
-                "presentment_money": {
-                  "amount": "885.95",
-                  "currency_code": "USD"
-                }
-              },
-              "total_outstanding": "0.00",
-              "total_price": "885.95",
-              "total_price_set": {
-                "shop_money": {
-                  "amount": "885.95",
-                  "currency_code": "USD"
-                },
-                "presentment_money": {
-                  "amount": "885.95",
-                  "currency_code": "USD"
-                }
-              },
-              "total_shipping_price_set": {
-                "shop_money": {
-                  "amount": "0.00",
-                  "currency_code": "USD"
-                },
-                "presentment_money": {
-                  "amount": "0.00",
-                  "currency_code": "USD"
-                }
-              },
-              "total_tax": "0.00",
-              "total_tax_set": {
-                "shop_money": {
-                  "amount": "0.00",
-                  "currency_code": "USD"
-                },
-                "presentment_money": {
-                  "amount": "0.00",
-                  "currency_code": "USD"
-                }
-              },
-              "total_tip_received": "0.00",
-              "total_weight": 0,
-              "updated_at": "2025-12-23T20:54:30-05:00",
-              "user_id": 108241420323,
-              "billing_address": {
-                "first_name": "Naveed",
-                "address1": "",
-                "phone": null,
-                "city": "",
-                "zip": null,
-                "province": null,
-                "country": "United States",
-                "last_name": "Soomro",
-                "address2": null,
-                "company": null,
-                "latitude": null,
-                "longitude": null,
-                "name": "Naveed Soomro",
-                "country_code": "US",
-                "province_code": null
-              },
-              "customer": {
-                "id": 7506439045155,
-                "created_at": "2025-12-21T07:58:32-05:00",
-                "updated_at": "2025-12-23T20:43:43-05:00",
-                "first_name": "Naveed",
-                "last_name": "Soomro",
-                "state": "disabled",
-                "note": "",
-                "verified_email": true,
-                "multipass_identifier": null,
-                "tax_exempt": false,
-                "email_marketing_consent": {
-                  "state": "not_subscribed",
-                  "opt_in_level": "single_opt_in",
-                  "consent_updated_at": null
-                },
-                "sms_marketing_consent": null,
-                "tags": "VIP",
-                "email": "wajidjavedalilanjar@gmail.com",
-                "phone": null,
-                "currency": "USD",
-                "tax_exemptions": [],
-                "admin_graphql_api_id": "gid://shopify/Customer/7506439045155",
-                "default_address": {
-                  "id": 8480441434147,
-                  "customer_id": 7506439045155,
-                  "first_name": "Naveed",
-                  "last_name": "Soomro",
-                  "company": null,
-                  "address1": null,
-                  "address2": null,
-                  "city": null,
-                  "province": null,
-                  "country": "United States",
-                  "zip": null,
-                  "phone": null,
-                  "name": "Naveed Soomro",
-                  "province_code": null,
-                  "country_code": "US",
-                  "country_name": "United States",
-                  "default": true
-                }
-              },
-              "discount_applications": [],
-              "fulfillments": [
-                {
-                  "id": 5454532673571,
-                  "admin_graphql_api_id": "gid://shopify/Fulfillment/5454532673571",
-                  "created_at": "2025-12-23T20:45:26-05:00",
-                  "location_id": 93832773667,
-                  "name": "#1007.1",
-                  "order_id": 5892415881251,
-                  "origin_address": {},
-                  "receipt": {},
-                  "service": "manual",
-                  "shipment_status": null,
-                  "status": "success",
-                  "tracking_company": "FedEx",
-                  "tracking_number": "TRK123456789",
-                  "tracking_numbers": [
-                    "TRK123456789"
-                  ],
-                  "tracking_url": "https://www.fedex.com/fedextrack/?trknbr=TRK123456789",
-                  "tracking_urls": [
-                    "https://www.fedex.com/fedextrack/?trknbr=TRK123456789"
-                  ],
-                  "updated_at": "2025-12-23T20:45:26-05:00",
-                  "line_items": [
+    "connections": {
+        "Receive Return Request": {
+            "main": [
+                [
                     {
-                      "id": 14257048518691,
-                      "admin_graphql_api_id": "gid://shopify/LineItem/14257048518691",
-                      "attributed_staffs": [],
-                      "current_quantity": 1,
-                      "fulfillable_quantity": 0,
-                      "fulfillment_service": "manual",
-                      "fulfillment_status": "fulfilled",
-                      "gift_card": false,
-                      "grams": 0,
-                      "name": "The Videographer Snowboard",
-                      "price": "885.95",
-                      "price_set": {
-                        "shop_money": {
-                          "amount": "885.95",
-                          "currency_code": "USD"
-                        },
-                        "presentment_money": {
-                          "amount": "885.95",
-                          "currency_code": "USD"
-                        }
-                      },
-                      "product_exists": true,
-                      "product_id": 7181259145251,
-                      "properties": [],
-                      "quantity": 1,
-                      "requires_shipping": true,
-                      "sku": null,
-                      "taxable": true,
-                      "title": "The Videographer Snowboard",
-                      "total_discount": "0.00",
-                      "total_discount_set": {
-                        "shop_money": {
-                          "amount": "0.00",
-                          "currency_code": "USD"
-                        },
-                        "presentment_money": {
-                          "amount": "0.00",
-                          "currency_code": "USD"
-                        }
-                      },
-                      "variant_id": 41828680630307,
-                      "variant_inventory_management": "shopify",
-                      "variant_title": null,
-                      "vendor": "ClothyMax",
-                      "tax_lines": [],
-                      "duties": [],
-                      "discount_allocations": []
+                        "node": "Extract Order Number",
+                        "type": "main",
+                        "index": 0
                     }
-                  ]
-                }
-              ],
-              "line_items": [
-                {
-                  "id": 14257048518691,
-                  "admin_graphql_api_id": "gid://shopify/LineItem/14257048518691",
-                  "attributed_staffs": [],
-                  "current_quantity": 1,
-                  "fulfillable_quantity": 0,
-                  "fulfillment_service": "manual",
-                  "fulfillment_status": "fulfilled",
-                  "gift_card": false,
-                  "grams": 0,
-                  "name": "The Videographer Snowboard",
-                  "price": "885.95",
-                  "price_set": {
-                    "shop_money": {
-                      "amount": "885.95",
-                      "currency_code": "USD"
-                    },
-                    "presentment_money": {
-                      "amount": "885.95",
-                      "currency_code": "USD"
+                ]
+            ]
+        },
+        "Extract Order Number": {
+            "main": [
+                [
+                    {
+                        "node": "Order Number Found?",
+                        "type": "main",
+                        "index": 0
                     }
-                  },
-                  "product_exists": true,
-                  "product_id": 7181259145251,
-                  "properties": [],
-                  "quantity": 1,
-                  "requires_shipping": true,
-                  "sku": null,
-                  "taxable": true,
-                  "title": "The Videographer Snowboard",
-                  "total_discount": "0.00",
-                  "total_discount_set": {
-                    "shop_money": {
-                      "amount": "0.00",
-                      "currency_code": "USD"
-                    },
-                    "presentment_money": {
-                      "amount": "0.00",
-                      "currency_code": "USD"
+                ]
+            ]
+        },
+        "Order Number Found?": {
+            "main": [
+                [
+                    {
+                        "node": "Search Order",
+                        "type": "main",
+                        "index": 0
                     }
-                  },
-                  "variant_id": 41828680630307,
-                  "variant_inventory_management": "shopify",
-                  "variant_title": null,
-                  "vendor": "ClothyMax",
-                  "tax_lines": [],
-                  "duties": [],
-                  "discount_allocations": []
-                }
-              ],
-              "payment_terms": null,
-              "refunds": [],
-              "shipping_address": {
-                "first_name": "Naveed",
-                "address1": "",
-                "phone": null,
-                "city": "",
-                "zip": null,
-                "province": null,
-                "country": "United States",
-                "last_name": "Soomro",
-                "address2": null,
-                "company": null,
-                "latitude": null,
-                "longitude": null,
-                "name": "Naveed Soomro",
-                "country_code": "US",
-                "province_code": null
-              },
-              "shipping_lines": []
-            }
-          ]
+                ],
+                [
+                    {
+                        "node": "AI Agent",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
         },
-        "pairedItem": {
-          "item": 0
-        }
-      }
-    ],
-    "Parse Order Response": [
-      {
-        "json": {
-          "orderFound": true,
-          "order": {
-            "id": 5892415881251,
-            "name": "#1007",
-            "email": "wajidjavedalilanjar@gmail.com",
-            "created_at": "2025-12-23T20:43:42-05:00",
-            "total_price": "885.95",
-            "currency": "USD",
-            "financial_status": "paid",
-            "fulfillment_status": "fulfilled",
-            "line_items": [
-              {
-                "id": 14257048518691,
-                "admin_graphql_api_id": "gid://shopify/LineItem/14257048518691",
-                "attributed_staffs": [],
-                "current_quantity": 1,
-                "fulfillable_quantity": 0,
-                "fulfillment_service": "manual",
-                "fulfillment_status": "fulfilled",
-                "gift_card": false,
-                "grams": 0,
-                "name": "The Videographer Snowboard",
-                "price": "885.95",
-                "price_set": {
-                  "shop_money": {
-                    "amount": "885.95",
-                    "currency_code": "USD"
-                  },
-                  "presentment_money": {
-                    "amount": "885.95",
-                    "currency_code": "USD"
-                  }
-                },
-                "product_exists": true,
-                "product_id": 7181259145251,
-                "properties": [],
-                "quantity": 1,
-                "requires_shipping": true,
-                "sku": null,
-                "taxable": true,
-                "title": "The Videographer Snowboard",
-                "total_discount": "0.00",
-                "total_discount_set": {
-                  "shop_money": {
-                    "amount": "0.00",
-                    "currency_code": "USD"
-                  },
-                  "presentment_money": {
-                    "amount": "0.00",
-                    "currency_code": "USD"
-                  }
-                },
-                "variant_id": 41828680630307,
-                "variant_inventory_management": "shopify",
-                "variant_title": null,
-                "vendor": "ClothyMax",
-                "tax_lines": [],
-                "duties": [],
-                "discount_allocations": []
-              }
-            ],
-            "customer": {
-              "id": 7506439045155,
-              "created_at": "2025-12-21T07:58:32-05:00",
-              "updated_at": "2025-12-23T20:43:43-05:00",
-              "first_name": "Naveed",
-              "last_name": "Soomro",
-              "state": "disabled",
-              "note": "",
-              "verified_email": true,
-              "multipass_identifier": null,
-              "tax_exempt": false,
-              "email_marketing_consent": {
-                "state": "not_subscribed",
-                "opt_in_level": "single_opt_in",
-                "consent_updated_at": null
-              },
-              "sms_marketing_consent": null,
-              "tags": "VIP",
-              "email": "wajidjavedalilanjar@gmail.com",
-              "phone": null,
-              "currency": "USD",
-              "tax_exemptions": [],
-              "admin_graphql_api_id": "gid://shopify/Customer/7506439045155",
-              "default_address": {
-                "id": 8480441434147,
-                "customer_id": 7506439045155,
-                "first_name": "Naveed",
-                "last_name": "Soomro",
-                "company": null,
-                "address1": null,
-                "address2": null,
-                "city": null,
-                "province": null,
-                "country": "United States",
-                "zip": null,
-                "phone": null,
-                "name": "Naveed Soomro",
-                "province_code": null,
-                "country_code": "US",
-                "country_name": "United States",
-                "default": true
-              }
-            },
-            "shipping_address": {
-              "first_name": "Naveed",
-              "address1": "",
-              "phone": null,
-              "city": "",
-              "zip": null,
-              "province": null,
-              "country": "United States",
-              "last_name": "Soomro",
-              "address2": null,
-              "company": null,
-              "latitude": null,
-              "longitude": null,
-              "name": "Naveed Soomro",
-              "country_code": "US",
-              "province_code": null
-            }
-          },
-          "customerEmail": "Wajid Javed <wajidjavedalilanjar@gmail.com>",
-          "requestedOrderNumber": "1007"
+        "Search Order": {
+            "main": [
+                [
+                    {
+                        "node": "Parse Order Response",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
         },
-        "pairedItem": {
-          "item": 0
-        }
-      }
-    ],
-    "Check Return Eligibility": [
-      {
-        "json": {
-          "eligible": true,
-          "order": {
-            "id": 5892415881251,
-            "name": "#1007",
-            "email": "wajidjavedalilanjar@gmail.com",
-            "created_at": "2025-12-23T20:43:42-05:00",
-            "total_price": "885.95",
-            "currency": "USD",
-            "fulfillment_status": "fulfilled",
-            "financial_status": "paid",
-            "line_items": [
-              {
-                "id": 14257048518691,
-                "admin_graphql_api_id": "gid://shopify/LineItem/14257048518691",
-                "attributed_staffs": [],
-                "current_quantity": 1,
-                "fulfillable_quantity": 0,
-                "fulfillment_service": "manual",
-                "fulfillment_status": "fulfilled",
-                "gift_card": false,
-                "grams": 0,
-                "name": "The Videographer Snowboard",
-                "price": "885.95",
-                "price_set": {
-                  "shop_money": {
-                    "amount": "885.95",
-                    "currency_code": "USD"
-                  },
-                  "presentment_money": {
-                    "amount": "885.95",
-                    "currency_code": "USD"
-                  }
-                },
-                "product_exists": true,
-                "product_id": 7181259145251,
-                "properties": [],
-                "quantity": 1,
-                "requires_shipping": true,
-                "sku": null,
-                "taxable": true,
-                "title": "The Videographer Snowboard",
-                "total_discount": "0.00",
-                "total_discount_set": {
-                  "shop_money": {
-                    "amount": "0.00",
-                    "currency_code": "USD"
-                  },
-                  "presentment_money": {
-                    "amount": "0.00",
-                    "currency_code": "USD"
-                  }
-                },
-                "variant_id": 41828680630307,
-                "variant_inventory_management": "shopify",
-                "variant_title": null,
-                "vendor": "ClothyMax",
-                "tax_lines": [],
-                "duties": [],
-                "discount_allocations": []
-              }
-            ],
-            "shipping_address": {
-              "first_name": "Naveed",
-              "address1": "",
-              "phone": null,
-              "city": "",
-              "zip": null,
-              "province": null,
-              "country": "United States",
-              "last_name": "Soomro",
-              "address2": null,
-              "company": null,
-              "latitude": null,
-              "longitude": null,
-              "name": "Naveed Soomro",
-              "country_code": "US",
-              "province_code": null
-            }
-          },
-          "eligibility": {
-            "withinReturnWindow": true,
-            "daysAgo": 1,
-            "returnWindowDays": 30,
-            "isFulfilled": true,
-            "isPaid": true,
-            "hasFinalSaleItems": false,
-            "autoApprove": false,
-            "needsApproval": true,
-            "orderTotal": 885.95
-          },
-          "ineligibleReasons": [],
-          "policy": {
-            "returnWindowDays": 30,
-            "exchangeWindowDays": 30,
-            "autoApproveUnder": 50,
-            "requiresApprovalOver": 200,
-            "allowFinalSaleReturns": false,
-            "refundOriginalShipping": false
-          },
-          "customerEmail": "Wajid Javed <wajidjavedalilanjar@gmail.com>",
-          "requestedOrderNumber": "1007"
+        "Parse Order Response": {
+            "main": [
+                [
+                    {
+                        "node": "Order Exists in Shopify?",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
         },
-        "pairedItem": {
-          "item": 0
-        }
-      }
-    ],
-    "AI Return Assistant (Approved)": [
-      {
-        "json": {
-          "output": "Hello!\n\nThank you for reaching out to us. I have reviewed your request for order #1007, and I’m happy to confirm that your return has been approved.\n\nSince \"The Videographer Snowboard\" is the item listed on this order, could you please confirm that this is the specific item you would like to return? Additionally, to help us improve our sizing guides and services, could you please clarify the reason for the return (for example, if it was a specific sizing issue, or if you have changed your mind)?\n\n**Next Steps:**\n\n*   **Return Label:** You will receive a return shipping label via email shortly. Please use this to send the snowboard back to us.\n*   **Refund Process:** Once we receive and inspect the item at our warehouse, your refund will be processed.\n*   **Timeline:** You can expect the refund to appear in your account within 5-7 business days after we receive the return.\n\nPlease let me know if you have any other questions or if there is anything else I can assist you with!"
+        "Order Exists in Shopify?": {
+            "main": [
+                [
+                    {
+                        "node": "Check Return Eligibility",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Order Not Found Response",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
         },
-        "pairedItem": {
-          "item": 0
-        }
-      }
-    ],
-    "Receive Return Request": [
-      {
-        "json": {
-          "id": "19b5ebf0500d6f48",
-          "threadId": "19b5ebf0500d6f48",
-          "snippet": "",
-          "payload": {
-            "mimeType": "multipart/alternative"
-          },
-          "sizeEstimate": 5746,
-          "historyId": "736103",
-          "internalDate": "1766821124000",
-          "labels": [
-            {
-              "id": "INBOX",
-              "name": "INBOX"
-            },
-            {
-              "id": "IMPORTANT",
-              "name": "IMPORTANT"
-            },
-            {
-              "id": "CATEGORY_PERSONAL",
-              "name": "CATEGORY_PERSONAL"
-            },
-            {
-              "id": "UNREAD",
-              "name": "UNREAD"
-            }
-          ],
-          "From": "Wajid Javed <wajidjavedalilanjar@gmail.com>",
-          "Subject": "return my order",
-          "To": "wajidjaved160@gmail.com"
+        "Check Return Eligibility": {
+            "main": [
+                [
+                    {
+                        "node": "Is Return Eligible?",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
         },
-        "pairedItem": {
-          "item": 0
+        "Is Return Eligible?": {
+            "main": [
+                [
+                    {
+                        "node": "AI Return Assistant (Approved)",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "AI Return Assistant (Rejected)",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "LLM": {
+            "ai_languageModel": [
+                [
+                    {
+                        "node": "AI Return Assistant (Approved)",
+                        "type": "ai_languageModel",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "AI Return Assistant (Approved)": {
+            "main": [
+                [
+                    {
+                        "node": "Send Return Response",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "AI Return Assistant (Rejected)": {
+            "main": [
+                [
+                    {
+                        "node": "Send Return Response",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "LLM1": {
+            "ai_languageModel": [
+                [
+                    {
+                        "node": "AI Return Assistant (Rejected)",
+                        "type": "ai_languageModel",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "LLM2": {
+            "ai_languageModel": [
+                [
+                    {
+                        "node": "AI Agent",
+                        "type": "ai_languageModel",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "AI Agent": {
+            "main": [
+                [
+                    {
+                        "node": "Send Order Number Request",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "LLM3": {
+            "ai_languageModel": [
+                [
+                    {
+                        "node": "Order Not Found Response",
+                        "type": "ai_languageModel",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Order Not Found Response": {
+            "main": [
+                [
+                    {
+                        "node": "Send Order Number Request2",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
         }
-      }
-    ]
-  },
-  "connections": {
-    "Receive Return Request": {
-      "main": [
-        [
-          {
-            "node": "Extract Order Number",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
     },
-    "Extract Order Number": {
-      "main": [
-        [
-          {
-            "node": "Order Number Found?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+    "active": true,
+    "settings": {
+        "executionOrder": "v1"
     },
-    "Order Number Found?": {
-      "main": [
-        [
-          {
-            "node": "Search Order",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "AI Agent",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+    "versionId": "4eb8d374-d26c-4f84-8e34-9e354d17f6da",
+    "meta": {
+        "templateCredsSetupCompleted": true,
+        "instanceId": "951cd8045825a8a20a7eede06a3ed42cd104a8154be59567587f2c4e1511ae87"
     },
-    "Search Order": {
-      "main": [
-        [
-          {
-            "node": "Parse Order Response",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Parse Order Response": {
-      "main": [
-        [
-          {
-            "node": "Order Exists in Shopify?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Order Exists in Shopify?": {
-      "main": [
-        [
-          {
-            "node": "Check Return Eligibility",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Order Not Found Response",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Check Return Eligibility": {
-      "main": [
-        [
-          {
-            "node": "Is Return Eligible?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Is Return Eligible?": {
-      "main": [
-        [
-          {
-            "node": "AI Return Assistant (Approved)",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "AI Return Assistant (Rejected)",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "LLM": {
-      "ai_languageModel": [
-        [
-          {
-            "node": "AI Return Assistant (Approved)",
-            "type": "ai_languageModel",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "AI Return Assistant (Approved)": {
-      "main": [
-        [
-          {
-            "node": "Send Return Response",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "AI Return Assistant (Rejected)": {
-      "main": [
-        [
-          {
-            "node": "Send Return Response",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "LLM1": {
-      "ai_languageModel": [
-        [
-          {
-            "node": "AI Return Assistant (Rejected)",
-            "type": "ai_languageModel",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "LLM2": {
-      "ai_languageModel": [
-        [
-          {
-            "node": "AI Agent",
-            "type": "ai_languageModel",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "AI Agent": {
-      "main": [
-        [
-          {
-            "node": "Send Order Number Request",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "LLM3": {
-      "ai_languageModel": [
-        [
-          {
-            "node": "Order Not Found Response",
-            "type": "ai_languageModel",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Order Not Found Response": {
-      "main": [
-        [
-          {
-            "node": "Send Order Number Request2",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    }
-  },
-  "active": true,
-  "settings": {
-    "executionOrder": "v1"
-  },
-  "versionId": "4eb8d374-d26c-4f84-8e34-9e354d17f6da",
-  "meta": {
-    "templateCredsSetupCompleted": true,
-    "instanceId": "951cd8045825a8a20a7eede06a3ed42cd104a8154be59567587f2c4e1511ae87"
-  },
-  "id": "Y1wofuwQUx1QC7Fd",
-  "tags": []
+    "id": "Y1wofuwQUx1QC7Fd",
+    "tags": []
 }
