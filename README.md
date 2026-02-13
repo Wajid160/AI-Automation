@@ -1,111 +1,36 @@
-# AI Automation Portfolio
+# ⚡ AI Automation Systems
 
-Welcome to my **AI & Agentic AI Automation** project repository. This collection showcases production-ready automation solutions built using cutting-edge AI technologies, agentic workflows, and intelligent systems.
-
----
-
-## 🎯 Mission
-
-To develop practical, scalable AI automation solutions across various business domains, with a focus on **agentic AI principles** that combine reasoning, tool usage, and autonomous decision-making.
+Production-ready AI automation workflows and systems built with N8N, Claude AI, and multi-agent architectures. These are real systems designed to eliminate manual work from business operations.
 
 ---
 
-## 🚀 Current Focus: Customer Support Automation
+## 📂 Projects
 
-I'm currently building comprehensive AI-powered customer support solutions that reduce operational costs, improve response times, and enhance customer experience.
+### Customer Support Automation
+AI-powered customer support system that automatically handles inquiries, routes tickets, and provides instant responses.
 
-### Featured Project: Shopify WISMO Agent
-
-📦 **[WISMO (Where Is My Order) AI Agent](Customer-Support/Shopify-Customer-Support/WISMO-Agent/)**
-
-An autonomous AI agent that handles order status inquiries for Shopify stores by:
-- Reading incoming customer emails automatically
-- Extracting Order IDs or customer emails
-- Retrieving real-time order data from Shopify
-- Generating accurate, policy-compliant responses
-- Never hallucinating order details
-
-**Tech Stack:** n8n, Shopify API, Gmail API, Google Gemini, LangChain Agent
-
-[View Full Documentation →](Customer-Support/Shopify-Customer-Support/WISMO-Agent/)
+📁 [`Customer-Support/`](./Customer-Support/)
 
 ---
 
-## 🗂️ Repository Structure
+## 🛠️ Tech Stack
 
-```
-AI-Automation/
-├── Customer-Support/          ← Current Focus Area
-│   └── Shopify-Customer-Support/
-│       └── WISMO-Agent/
-│           ├── workflow/
-│           ├── prompts/
-│           ├── architecture/
-│           └── README.md
-└── README.md                  ← You are here
-```
+![N8N](https://img.shields.io/badge/N8N-EA4B71?style=flat&logo=n8n&logoColor=white)
+![Claude AI](https://img.shields.io/badge/Claude_AI-191919?style=flat)
+![Python](https://img.shields.io/badge/Python-3776AB?style=flat&logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat&logo=fastapi&logoColor=white)
 
 ---
 
-## 🔮 Future Categories
+## 🎯 What These Systems Do
 
-After completing the Customer Support automation suite, I plan to expand into:
-
-- **Sales & Marketing Automation**
-  - Lead qualification agents
-  - Personalized outreach systems
-  - Content generation workflows
-
-- **Operations & Workflow Automation**
-  - Document processing agents
-  - Data extraction & analysis
-  - Task orchestration systems
-
-- **E-commerce Automation**
-  - Inventory management
-  - Product recommendations
-  - Returns & refunds handling
-
-- **Analytics & Reporting**
-  - Automated insights generation
-  - Predictive analytics agents
-  - Real-time dashboards
+- **Automate repetitive workflows** — No more manual data entry, ticket routing, or content scheduling
+- **Intelligent decision-making** — AI agents that understand context and act accordingly
+- **24/7 operation** — Systems that run without human intervention
+- **Error handling** — Built-in retry logic and fallback mechanisms
 
 ---
 
-## 💡 Key Principles
+## 📫 Contact
 
-All projects in this repository follow these core principles:
-
-✅ **Production-Ready** – Real-world applicable, not just demos  
-✅ **Agentic Design** – Autonomous reasoning with tool integration  
-✅ **Fail-Safe** – Strict guardrails against hallucinations  
-✅ **Scalable** – Built to handle real workloads  
-✅ **Well-Documented** – Clear setup guides and architecture diagrams
-
----
-
-## 👤 About
-
-**Wajid Javed**  
-AI Automation & Agentic Systems Developer
-
-I specialize in building intelligent automation systems that combine AI reasoning with practical business workflows. Each project demonstrates real-world problem-solving using modern AI technologies.
-
----
-
-## 📫 Connect
-
-- **GitHub:** [Wajid160](https://github.com/Wajid160)
-- **Project Repository:** [AI-Automation](https://github.com/Wajid160/AI-Automation)
-
----
-
-## 📄 License
-
-MIT License – Feel free to learn from and adapt these solutions for your own projects.
-
----
-
-> **Status:** 🟢 Actively developing Customer Support automation solutions  
-> **Last Updated:** December 2025
+**Wajid Javed** — [LinkedIn](https://www.linkedin.com/in/wajidjaved160/) | [YouTube](https://youtube.com/@PhotiqAI) | [Portfolio](https://wajid-javed-portfolio.vercel.app/)
